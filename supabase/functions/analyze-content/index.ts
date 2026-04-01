@@ -89,6 +89,19 @@ async function analyzeContent(content: string, contentType: string, supabase: an
   score += analyzeTrustSignals(contentLower, indicators, features);
   score += analyzeRequestedActions(contentLower, indicators, features);
   score += analyzeAnatomyPatterns(contentLower, indicators, features);
+  score += analyzeSpoofingPatterns(contentLower, indicators, features);
+  score += analyzeCredentialHarvesting(contentLower, indicators, features);
+  score += analyzeReputationalHarms(contentLower, indicators, features);
+  score += analyzeCloneAttacks(contentLower, content, indicators, features);
+  score += analyzeSmishingPatterns(contentLower, indicators, features);
+  score += analyzeVishing(contentLower, indicators, features);
+  score += analyzeBusinessEmailCompromise(contentLower, indicators, features);
+  score += analyzeDomainsAndIP(content, contentLower, indicators, features);
+  score += analyzeTimeBasedThreats(contentLower, indicators, features);
+  score += analyzeSocialEngineeringTactics(contentLower, indicators, features);
+  score += analyzeImageAndAttachmentRisks(contentLower, indicators, features);
+  score += analyzeRansomwareIndicators(contentLower, indicators, features);
+  score += analyzeSupplyChainThreats(contentLower, indicators, features);
 
   const { data: threatIndicators } = await supabase
     .from('threat_indicators')
@@ -544,6 +557,461 @@ function matchContentThreatIndicators(contentLower: string, content: string, thr
       } catch {
       }
     }
+  }
+
+  return score;
+}
+
+function analyzeSpoofingPatterns(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const spoofingIndicators = [
+    'noreply@',
+    'noreply.',
+    'do-not-reply',
+    'no-reply',
+    'reply-to:',
+  ];
+
+  for (const indicator of spoofingIndicators) {
+    if (contentLower.includes(indicator)) {
+      score += 14;
+      indicators.push(`Email spoofing indicator: ${indicator}`);
+      features.spoofing_detected = true;
+      break;
+    }
+  }
+
+  const domainMismatchPatterns = [
+    '@' in contentLower ? contentLower.match(/@[\w.-]+/g) : [],
+  ];
+
+  return score;
+}
+
+function analyzeCredentialHarvesting(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const harvestingKeywords = [
+    'enter your password',
+    'confirm password',
+    'verify password',
+    'update credentials',
+    'reset your password',
+    'change your password',
+    'enter account details',
+    'enter login information',
+    'verify your login',
+    'authenticate',
+    're-authenticate',
+    'confirm your username',
+    'social security number',
+    'ssn required',
+    'driving license',
+    'date of birth',
+    'mother maiden name',
+    'security question',
+  ];
+
+  let harvestingCount = 0;
+  for (const keyword of harvestingKeywords) {
+    if (contentLower.includes(keyword)) {
+      harvestingCount++;
+      indicators.push(`Credential harvesting: "${keyword}"`);
+    }
+  }
+
+  if (harvestingCount > 0) {
+    score += Math.min(harvestingCount * 16, 60);
+    features.credential_harvesting = harvestingCount;
+  }
+
+  return score;
+}
+
+function analyzeReputationalHarms(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const reputationKeywords = [
+    'your reputation',
+    'damage your reputation',
+    'embarrassing information',
+    'expose you',
+    'release information',
+    'publicly shame',
+    'blackmail',
+    'extortion',
+    'compromising photos',
+    'private information',
+    'intimate images',
+  ];
+
+  let repCount = 0;
+  for (const keyword of reputationKeywords) {
+    if (contentLower.includes(keyword)) {
+      repCount++;
+      indicators.push(`Reputational threat: "${keyword}"`);
+    }
+  }
+
+  if (repCount > 0) {
+    score += Math.min(repCount * 18, 55);
+    features.reputation_threat = true;
+  }
+
+  return score;
+}
+
+function analyzeCloneAttacks(contentLower: string, content: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const clonePatterns = [
+    'this is a copy of',
+    'similar to official',
+    'looks like',
+    'similar interface',
+  ];
+
+  for (const pattern of clonePatterns) {
+    if (contentLower.includes(pattern)) {
+      score += 19;
+      indicators.push(`Clone attack indicator: "${pattern}"`);
+      features.clone_attack = true;
+      break;
+    }
+  }
+
+  const fakeLogos = ['[logo]', '[image:', 'base64'];
+  for (const logo of fakeLogos) {
+    if (contentLower.includes(logo)) {
+      score += 12;
+      indicators.push(`Potential fake logo/image detected`);
+      break;
+    }
+  }
+
+  return score;
+}
+
+function analyzeSmishingPatterns(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const smishingKeywords = [
+    'click this link',
+    'tap here',
+    'text back',
+    'reply to this',
+    'call this number',
+    'msg reply',
+    'sms confirmation',
+    'text to confirm',
+    'mobile verification',
+    '+1-',
+    '+44-',
+  ];
+
+  let smishCount = 0;
+  for (const keyword of smishingKeywords) {
+    if (contentLower.includes(keyword)) {
+      smishCount++;
+      indicators.push(`SMS phishing (smishing): "${keyword}"`);
+    }
+  }
+
+  if (smishCount > 0) {
+    score += Math.min(smishCount * 14, 50);
+    features.smishing_detected = true;
+  }
+
+  return score;
+}
+
+function analyzeVishing(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const vishingKeywords = [
+    'call us',
+    'call now',
+    'phone number',
+    'call at',
+    'dial',
+    'speak to',
+    'talk to our team',
+    'voice verification',
+    'phone verification',
+    'automated call',
+    'voice message',
+  ];
+
+  let vishingCount = 0;
+  for (const keyword of vishingKeywords) {
+    if (contentLower.includes(keyword)) {
+      vishingCount++;
+      indicators.push(`Voice phishing (vishing): "${keyword}"`);
+    }
+  }
+
+  if (vishingCount > 0) {
+    score += Math.min(vishingCount * 13, 48);
+    features.vishing_detected = true;
+  }
+
+  return score;
+}
+
+function analyzeBusinessEmailCompromise(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const becKeywords = [
+    'urgent transfer',
+    'wire transfer needed',
+    'urgent wire',
+    'payment needed',
+    'confidential request',
+    'urgent request',
+    'unusual request',
+    'executive',
+    'ceo',
+    'cfo',
+    'banking details',
+    'account information needed',
+    'payment instructions',
+    'wire instructions',
+  ];
+
+  let becCount = 0;
+  for (const keyword of becKeywords) {
+    if (contentLower.includes(keyword)) {
+      becCount++;
+      indicators.push(`BEC indicator: "${keyword}"`);
+    }
+  }
+
+  if (becCount >= 3) {
+    score += Math.min(becCount * 17, 62);
+    features.bec_detected = true;
+    indicators.push('Business Email Compromise (BEC) pattern detected');
+  }
+
+  return score;
+}
+
+function analyzeDomainsAndIP(content: string, contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const ipPattern = /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/g;
+  const ips = content.match(ipPattern) || [];
+
+  if (ips.length > 0) {
+    score += Math.min(ips.length * 16, 45);
+    indicators.push(`IP address(es) detected instead of domain: ${ips.join(', ')}`);
+    features.ip_addresses = ips;
+  }
+
+  const suspiciousTLDs = ['.tk', '.ml', '.ga', '.cf', '.gq', '.top', '.download', '.review'];
+  for (const tld of suspiciousTLDs) {
+    if (contentLower.includes(tld)) {
+      score += 15;
+      indicators.push(`Suspicious TLD detected: ${tld}`);
+      features.suspicious_tld = tld;
+      break;
+    }
+  }
+
+  const lookalikeDomains = [
+    'goggle.com',
+    'amaz0n.com',
+    'paypai.com',
+    'microso.com',
+    'appl3.com',
+  ];
+
+  for (const domain of lookalikeDomains) {
+    if (contentLower.includes(domain)) {
+      score += 26;
+      indicators.push(`Lookalike domain detected: ${domain}`);
+      features.lookalike_domain = domain;
+      break;
+    }
+  }
+
+  return score;
+}
+
+function analyzeTimeBasedThreats(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const timeBasedKeywords = [
+    'last chance',
+    'offer expires',
+    'limited time offer',
+    'today only',
+    'ends at midnight',
+    'before tomorrow',
+    'final notice',
+    'last warning',
+    'don\'t miss out',
+    'act before',
+  ];
+
+  let timeCount = 0;
+  for (const keyword of timeBasedKeywords) {
+    if (contentLower.includes(keyword)) {
+      timeCount++;
+      indicators.push(`Time-based pressure: "${keyword}"`);
+    }
+  }
+
+  if (timeCount > 0) {
+    score += Math.min(timeCount * 11, 40);
+    features.time_pressure = timeCount;
+  }
+
+  return score;
+}
+
+function analyzeSocialEngineeringTactics(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const seKeywords = [
+    'congratulations',
+    'you\'ve won',
+    'claim your prize',
+    'you\'ve been selected',
+    'exclusive offer',
+    'special for you',
+    'personalized deal',
+    'act like you know them',
+    'impersonation',
+    'pretend to be',
+    'authority',
+    'act official',
+  ];
+
+  let seCount = 0;
+  for (const keyword of seKeywords) {
+    if (contentLower.includes(keyword)) {
+      seCount++;
+      indicators.push(`Social engineering: "${keyword}"`);
+    }
+  }
+
+  if (seCount > 0) {
+    score += Math.min(seCount * 12, 45);
+    features.social_engineering = seCount;
+  }
+
+  return score;
+}
+
+function analyzeImageAndAttachmentRisks(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const attachmentRisks = [
+    '.exe',
+    '.zip',
+    '.rar',
+    '.scr',
+    '.vbs',
+    '.js',
+    '.bat',
+    '.cmd',
+    '.com',
+    '.pif',
+    '.msi',
+    '.ps1',
+    '.docm',
+    '.xlsm',
+    '.pptm',
+  ];
+
+  let riskCount = 0;
+  for (const risk of attachmentRisks) {
+    if (contentLower.includes(risk)) {
+      riskCount++;
+      indicators.push(`Potentially dangerous file type: ${risk}`);
+    }
+  }
+
+  if (riskCount > 0) {
+    score += Math.min(riskCount * 20, 70);
+    features.dangerous_attachments = riskCount;
+  }
+
+  const imageNotice = ['embedded image', 'disable images', 'view images', 'load images'];
+  for (const notice of imageNotice) {
+    if (contentLower.includes(notice)) {
+      score += 10;
+      indicators.push(`Image loading prompt detected (tracking/obfuscation)`);
+      break;
+    }
+  }
+
+  return score;
+}
+
+function analyzeRansomwareIndicators(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const ransomwareKeywords = [
+    'your files encrypted',
+    'your data encrypted',
+    'pay to decrypt',
+    'ransom',
+    'bitcoin',
+    'crypto payment',
+    'decryption key',
+    'pay within',
+    'your computer has been locked',
+    'system compromised',
+    'critical alert',
+  ];
+
+  let ransomCount = 0;
+  for (const keyword of ransomwareKeywords) {
+    if (contentLower.includes(keyword)) {
+      ransomCount++;
+      indicators.push(`Ransomware indicator: "${keyword}"`);
+    }
+  }
+
+  if (ransomCount > 0) {
+    score += Math.min(ransomCount * 22, 80);
+    features.ransomware_detected = true;
+    indicators.push('CRITICAL: Potential ransomware threat detected');
+  }
+
+  return score;
+}
+
+function analyzeSupplyChainThreats(contentLower: string, indicators: string[], features: Record<string, unknown>): number {
+  let score = 0;
+
+  const supplyChainKeywords = [
+    'invoice attached',
+    'pending invoice',
+    'payment confirmation needed',
+    'order confirmation',
+    'shipment notification',
+    'delivery confirmation',
+    'tracking number',
+    'customs',
+    'tariff',
+    'update payment method',
+    'billing information',
+  ];
+
+  let scCount = 0;
+  for (const keyword of supplyChainKeywords) {
+    if (contentLower.includes(keyword)) {
+      scCount++;
+      indicators.push(`Supply chain threat: "${keyword}"`);
+    }
+  }
+
+  if (scCount >= 2) {
+    score += Math.min(scCount * 14, 50);
+    features.supply_chain_threat = true;
   }
 
   return score;
