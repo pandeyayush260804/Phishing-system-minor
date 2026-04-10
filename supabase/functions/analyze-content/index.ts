@@ -681,9 +681,12 @@ function analyzeSpoofingPatterns(contentLower: string, indicators: string[], fea
     }
   }
 
-  const domainMismatchPatterns = [
-    '@' in contentLower ? contentLower.match(/@[\w.-]+/g) : [],
-  ];
+  if (contentLower.includes('@')) {
+    const domainMatches = contentLower.match(/@[\w.-]+/g);
+    if (domainMatches) {
+      features.email_domains = domainMatches;
+    }
+  }
 
   return score;
 }
