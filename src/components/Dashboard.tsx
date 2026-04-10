@@ -5,8 +5,9 @@ import ContentAnalyzer from './ContentAnalyzer';
 import ThreatIntelligence from './ThreatIntelligence';
 import StatsDashboard from './StatsDashboard';
 import ReportForm from './ReportForm';
-
-type TabType = 'scanner' | 'analyzer' | 'stats' | 'intelligence' | 'report';
+import { Bot } from 'lucide-react';
+import AIExplanation from './AIExplanation';
+type TabType = 'scanner' | 'analyzer' | 'stats' | 'intelligence' | 'report' | 'ai';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -14,7 +15,7 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('scanner');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const tabs = [
     { id: 'scanner' as const, label: 'URL Scanner', icon: Shield },
@@ -25,78 +26,113 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col">
+
+      {/* HEADER */}
+      <header className="bg-[#020617]/80 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-40">
+        <div className="px-6 py-4 flex items-center justify-between">
+
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden p-2 hover:bg-slate-800 rounded-lg"
             >
-              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {sidebarOpen ? <X /> : <Menu />}
             </button>
+
             <div className="flex items-center gap-3">
-              <div className="bg-blue-600 p-2.5 rounded-lg">
+              <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-2.5 rounded-xl shadow-lg">
                 <Shield className="w-6 h-6 text-white" />
               </div>
+
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">PhishGuard</h1>
-                <p className="text-xs text-gray-500">Phishing Detection System</p>
+                <h1 className="text-xl font-bold">PhishGuard</h1>
+                <p className="text-xs text-slate-400">Detection System</p>
               </div>
             </div>
           </div>
+
           <button
             onClick={onLogout}
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-red-500/20 hover:text-red-400 transition"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Exit</span>
+            <LogOut className="w-4 h-4" />
+            Exit
           </button>
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex flex-1 relative">
+
+        {/* 🔥 SIDEBAR */}
         <aside
-          className={`${
-            sidebarOpen ? 'w-64' : 'w-0'
-          } bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden lg:w-64`}
+          className={`
+            fixed lg:static z-50 h-full
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            lg:translate-x-0
+            w-64 bg-[#020617] border-r border-slate-800
+            transition-transform duration-300
+          `}
         >
           <nav className="p-4 space-y-2">
+
             {tabs.map((tab) => {
               const Icon = tab.icon;
+
               return (
                 <button
                   key={tab.id}
                   onClick={() => {
                     setActiveTab(tab.id);
-                    setSidebarOpen(false);
+
+                    // close sidebar only on mobile
+                    if (window.innerWidth < 1024) {
+                      setSidebarOpen(false);
+                    }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                  className={`group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                  ${
                     activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 text-blue-400'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-5 h-5 group-hover:scale-110 transition" />
                   {tab.label}
                 </button>
               );
             })}
+
           </nav>
         </aside>
 
+        {/* 🔥 OVERLAY (mobile only) */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* MAIN */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 sm:p-6 lg:p-8">
-            <div className="max-w-6xl mx-auto">
-              <div className="transition-opacity duration-300">
-                {activeTab === 'scanner' && <URLScanner />}
-                {activeTab === 'analyzer' && <ContentAnalyzer />}
-                {activeTab === 'stats' && <StatsDashboard />}
-                {activeTab === 'intelligence' && <ThreatIntelligence />}
-                {activeTab === 'report' && <ReportForm />}
-              </div>
+
+          {/* background glow */}
+          <div className="absolute w-[400px] h-[400px] bg-blue-500/10 blur-3xl rounded-full top-20 left-20"></div>
+
+          <div className="relative p-6 lg:p-10">
+            <div className="max-w-6xl mx-auto animate-fade-in">
+
+              {activeTab === 'scanner' && <URLScanner />}
+              {activeTab === 'analyzer' && <ContentAnalyzer />}
+              {activeTab === 'stats' && <StatsDashboard />}
+              {activeTab === 'intelligence' && <ThreatIntelligence />}
+              {activeTab === 'report' && <ReportForm />}
+              {activeTab === 'ai' && <AIExplanation />}
+
             </div>
           </div>
+
         </main>
       </div>
     </div>

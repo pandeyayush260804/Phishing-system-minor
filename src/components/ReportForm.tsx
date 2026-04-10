@@ -21,9 +21,7 @@ export default function ReportForm() {
       setContent('');
       setEmail('');
 
-      setTimeout(() => {
-        setSubmitted(false);
-      }, 5000);
+      setTimeout(() => setSubmitted(false), 5000);
     } catch (error) {
       console.error('Error submitting report:', error);
       alert('Failed to submit report. Please try again.');
@@ -33,36 +31,43 @@ export default function ReportForm() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6">
+
+      {/* HEADER */}
       <div className="flex items-center gap-3 mb-6">
-        <Flag className="w-8 h-8 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Report Suspicious Content</h2>
+        <Flag className="w-7 h-7 text-blue-400" />
+        <h2 className="text-2xl font-bold text-white">Report Threat</h2>
       </div>
 
       {submitted ? (
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center">
-          <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-green-800 mb-2">Report Submitted Successfully</h3>
-          <p className="text-green-700">
-            Thank you for helping keep everyone safe. Your report will be reviewed by our security team.
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6 text-center">
+          <CheckCircle className="w-14 h-14 text-green-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-green-400 mb-2">
+            Report Submitted
+          </h3>
+          <p className="text-slate-300">
+            Thanks for helping improve security. Your report will be reviewed.
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* TYPE */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm text-slate-400 mb-2">
               Report Type
             </label>
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {(['url', 'email', 'sms', 'other'] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setReportType(type)}
-                  className={`px-4 py-2 rounded-lg border-2 transition-colors capitalize ${
+                  className={`px-4 py-2 rounded-lg border transition-all capitalize ${
                     reportType === type
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                      ? 'bg-blue-500/20 border-blue-500 text-blue-400'
+                      : 'border-slate-700 text-slate-400 hover:bg-slate-800'
                   }`}
                 >
                   {type}
@@ -71,47 +76,56 @@ export default function ReportForm() {
             </div>
           </div>
 
+          {/* CONTENT */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm text-slate-400 mb-2">
               Suspicious Content
             </label>
+
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Paste the suspicious URL, email content, or message here..."
+              placeholder="Paste suspicious URL, email, or message..."
               rows={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 bg-[#020617] border border-slate-700 rounded-xl text-white 
+              focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
               required
               disabled={loading}
             />
           </div>
 
+          {/* EMAIL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm text-slate-400 mb-2">
               Your Email (Optional)
             </label>
+
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your.email@example.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="your@email.com"
+              className="w-full px-4 py-2 bg-[#020617] border border-slate-700 rounded-xl text-white 
+              focus:ring-2 focus:ring-blue-500 focus:outline-none"
               disabled={loading}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Optional: Provide your email if you'd like updates on this report
+
+            <p className="text-xs text-slate-500 mt-1">
+              Optional: receive updates about this report
             </p>
           </div>
 
+          {/* BUTTON */}
           <button
             type="submit"
             disabled={loading || !content.trim()}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors font-medium"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 
+            hover:scale-[1.02] transition-all duration-200 font-semibold flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Submitting Report...
+                Submitting...
               </>
             ) : (
               <>
@@ -121,11 +135,14 @@ export default function ReportForm() {
             )}
           </button>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <strong>What happens next?</strong> Your report will be analyzed by our ML system and reviewed by security experts. If confirmed as a threat, it will be added to our threat database to protect others.
+          {/* INFO */}
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+            <p className="text-sm text-slate-300">
+              <strong className="text-blue-400">What happens next?</strong><br />
+              Your report is analyzed and added to the threat database if confirmed.
             </p>
           </div>
+
         </form>
       )}
     </div>

@@ -27,140 +27,131 @@ export default function StatsDashboard() {
     totalScans: scans.length,
     phishingDetected: scans.filter(s => s.is_phishing).length,
     safeContent: scans.filter(s => !s.is_phishing).length,
-    avgConfidence: scans.length > 0
-      ? scans.reduce((acc, s) => acc + s.confidence_score, 0) / scans.length
-      : 0,
-    avgScanTime: scans.length > 0
-      ? scans.reduce((acc, s) => acc + s.scan_duration_ms, 0) / scans.length
-      : 0,
+    avgScanTime:
+      scans.length > 0
+        ? scans.reduce((acc, s) => acc + s.scan_duration_ms, 0) / scans.length
+        : 0,
   };
 
   const recentScans = scans.slice(0, 10);
 
-  const getThreatBadge = (isPhishing: boolean, score: number) => {
-    if (!isPhishing) return 'bg-green-100 text-green-700 border-green-200';
-    if (score >= 80) return 'bg-red-100 text-red-700 border-red-200';
-    if (score >= 65) return 'bg-orange-100 text-orange-700 border-orange-200';
-    return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  const getBadge = (isPhishing: boolean, score: number) => {
+    if (!isPhishing) return 'bg-green-500/20 text-green-400 border-green-500/30';
+    if (score >= 80) return 'bg-red-500/20 text-red-400 border-red-500/30';
+    if (score >= 65) return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+    return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
   };
 
-  const formatTime = (ms: number) => {
-    return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(2)}s`;
-  };
+  const formatTime = (ms: number) =>
+    ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(2)}s`;
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    const diff = Date.now() - d.getTime();
+    const m = Math.floor(diff / 60000);
+    const h = Math.floor(diff / 3600000);
+    const day = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+    if (m < 1) return 'Just now';
+    if (m < 60) return `${m}m ago`;
+    if (h < 24) return `${h}h ago`;
+    return `${day}d ago`;
   };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-center py-12">
-          <Activity className="w-8 h-8 text-blue-600 animate-pulse" />
-        </div>
+      <div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-6 flex justify-center py-16">
+        <Activity className="w-8 h-8 text-blue-400 animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Scans</p>
-              <p className="text-3xl font-bold text-gray-800">{stats.totalScans}</p>
-            </div>
-            <BarChart3 className="w-12 h-12 text-blue-500 opacity-80" />
-          </div>
-        </div>
+    <div className="space-y-8">
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Threats Detected</p>
-              <p className="text-3xl font-bold text-red-600">{stats.phishingDetected}</p>
-            </div>
-            <Shield className="w-12 h-12 text-red-500 opacity-80" />
-          </div>
-        </div>
+      {/* 🔥 STATS CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Safe Content</p>
-              <p className="text-3xl font-bold text-green-600">{stats.safeContent}</p>
-            </div>
-            <Shield className="w-12 h-12 text-green-500 opacity-80" />
-          </div>
-        </div>
+        <StatCard title="Total Scans" value={stats.totalScans} icon={<BarChart3 />} />
+        <StatCard title="Threats Detected" value={stats.phishingDetected} icon={<Shield />} danger />
+        <StatCard title="Safe Content" value={stats.safeContent} icon={<Shield />} success />
+        <StatCard title="Avg Scan Time" value={formatTime(stats.avgScanTime)} icon={<TrendingUp />} />
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Avg Scan Time</p>
-              <p className="text-3xl font-bold text-gray-800">{formatTime(stats.avgScanTime)}</p>
-            </div>
-            <TrendingUp className="w-12 h-12 text-blue-500 opacity-80" />
-          </div>
-        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <Activity className="w-6 h-6 text-blue-600" />
+      {/* 🔥 RECENT SCANS */}
+      <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6">
+
+        <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+          <Activity className="text-blue-400" />
           Recent Scans
         </h3>
 
         {recentScans.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No scans yet</p>
+          <p className="text-slate-400 text-center py-8">No scans yet</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {recentScans.map((scan) => (
               <div
                 key={scan.id}
-                className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                className="bg-[#020617] border border-slate-800 rounded-xl p-4 
+                hover:border-blue-500/30 transition"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium border ${getThreatBadge(scan.is_phishing, scan.confidence_score)}`}>
-                        {scan.is_phishing ? 'PHISHING' : 'SAFE'}
-                      </span>
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
-                        {scan.scan_type.toUpperCase()}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Score: {scan.confidence_score.toFixed(1)}%
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 truncate mb-1">
-                      {scan.input_data}
-                    </p>
-                    <div className="flex gap-4 text-xs text-gray-500">
-                      <span>{formatDate(scan.created_at)}</span>
-                      <span>{formatTime(scan.scan_duration_ms)}</span>
-                      {scan.threat_indicators.length > 0 && (
-                        <span>{scan.threat_indicators.length} indicators</span>
-                      )}
-                    </div>
-                  </div>
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+
+                  <span className={`px-2 py-1 text-xs rounded border ${getBadge(scan.is_phishing, scan.confidence_score)}`}>
+                    {scan.is_phishing ? 'PHISHING' : 'SAFE'}
+                  </span>
+
+                  <span className="px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded">
+                    {scan.scan_type.toUpperCase()}
+                  </span>
+
+                  <span className="text-xs text-slate-400">
+                    Score: {scan.confidence_score.toFixed(1)}%
+                  </span>
+                </div>
+
+                <p className="text-white text-sm truncate mb-2">
+                  {scan.input_data}
+                </p>
+
+                <div className="text-xs text-slate-500 flex gap-4 flex-wrap">
+                  <span>{formatDate(scan.created_at)}</span>
+                  <span>{formatTime(scan.scan_duration_ms)}</span>
+                  {scan.threat_indicators.length > 0 && (
+                    <span>{scan.threat_indicators.length} indicators</span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+    </div>
+  );
+}
+
+/* 🔥 reusable stat card */
+function StatCard({ title, value, icon, danger, success }: any) {
+  return (
+    <div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-6 
+    hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]
+    transition">
+
+      <div className="flex justify-between items-center mb-3">
+        <p className="text-sm text-slate-400">{title}</p>
+        <div className="text-blue-400">{icon}</div>
+      </div>
+
+      <h2 className={`text-3xl font-bold ${
+        danger ? 'text-red-400' :
+        success ? 'text-green-400' :
+        'text-white'
+      }`}>
+        {value}
+      </h2>
     </div>
   );
 }

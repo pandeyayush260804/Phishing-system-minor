@@ -26,178 +26,149 @@ export default function ContentAnalyzer() {
     }
   };
 
-  const getThreatColor = (level: string) => {
+  const getThreatStyles = (level: string) => {
     switch (level) {
-      case 'critical': return 'text-red-600 bg-red-50 border-red-200';
-      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      default: return 'text-green-600 bg-green-50 border-green-200';
+      case 'critical': return 'border-red-500/40 bg-red-500/10 text-red-400';
+      case 'high': return 'border-orange-500/40 bg-orange-500/10 text-orange-400';
+      case 'medium': return 'border-yellow-500/40 bg-yellow-500/10 text-yellow-400';
+      default: return 'border-green-500/40 bg-green-500/10 text-green-400';
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-red-600';
-    if (score >= 65) return 'text-orange-600';
-    if (score >= 50) return 'text-yellow-600';
-    return 'text-green-600';
+    if (score >= 80) return 'text-red-400';
+    if (score >= 65) return 'text-orange-400';
+    if (score >= 50) return 'text-yellow-400';
+    return 'text-green-400';
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6">
+
+      {/* HEADER */}
       <div className="flex items-center gap-3 mb-6">
-        <Mail className="w-8 h-8 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Email / Message Analyzer</h2>
+        <Mail className="w-7 h-7 text-blue-400" />
+        <h2 className="text-2xl font-bold text-white">Content Analyzer</h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+
+        {/* TYPE SELECT */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content Type
-          </label>
+          <label className="block text-sm text-slate-400 mb-2">Content Type</label>
           <div className="flex gap-3">
-            <button
-              onClick={() => setContentType('email')}
-              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                contentType === 'email'
-                  ? 'border-blue-600 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
-              }`}
-            >
-              Email
-            </button>
-            <button
-              onClick={() => setContentType('sms')}
-              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                contentType === 'sms'
-                  ? 'border-blue-600 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
-              }`}
-            >
-              SMS
-            </button>
-            <button
-              onClick={() => setContentType('other')}
-              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                contentType === 'other'
-                  ? 'border-blue-600 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
-              }`}
-            >
-              Other
-            </button>
+            {['email', 'sms', 'other'].map((type) => (
+              <button
+                key={type}
+                onClick={() => setContentType(type as any)}
+                className={`px-4 py-2 rounded-lg border transition-all ${
+                  contentType === type
+                    ? 'bg-blue-500/20 border-blue-500 text-blue-400'
+                    : 'border-slate-700 text-slate-400 hover:bg-slate-800'
+                }`}
+              >
+                {type.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
 
+        {/* TEXTAREA */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Paste message content
-          </label>
+          <label className="block text-sm text-slate-400 mb-2">Paste content</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Paste the email body, SMS message, or any suspicious text here..."
+            placeholder="Paste suspicious message, email or SMS..."
             rows={8}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-4 py-3 bg-[#020617] border border-slate-700 rounded-xl text-white 
+            focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
             disabled={loading}
           />
         </div>
 
+        {/* BUTTON */}
         <button
           onClick={handleAnalyze}
           disabled={loading || !content.trim()}
-          className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors font-medium"
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 
+          hover:scale-[1.02] transition-all duration-200 font-semibold flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Analyzing Content...
+              Scanning...
             </>
           ) : (
             'Analyze Content'
           )}
         </button>
 
+        {/* RESULT */}
         {result && (
-          <div className="mt-6 space-y-4">
-            <div className={`p-4 rounded-lg border-2 ${getThreatColor(result.threatLevel)}`}>
-              <div className="flex items-start gap-3">
-                {result.isPhishing ? (
-                  <AlertTriangle className="w-6 h-6 flex-shrink-0 mt-1" />
-                ) : (
-                  <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
-                )}
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-1">
-                    {result.isPhishing ? 'PHISHING DETECTED' : 'Content Appears Legitimate'}
+          <div className="space-y-4 mt-6">
+
+            {/* RESULT BOX */}
+            <div className={`p-4 rounded-xl border ${getThreatStyles(result.threatLevel)}`}>
+              <div className="flex gap-3">
+                {result.isPhishing ? <AlertTriangle /> : <CheckCircle />}
+
+                <div>
+                  <h3 className="font-bold text-lg">
+                    {result.isPhishing ? 'Phishing Detected' : 'Content Safe'}
                   </h3>
-                  <p className="text-sm opacity-90">
-                    Threat Level: <span className="font-semibold uppercase">{result.threatLevel}</span>
+
+                  <p className="text-sm">
+                    Threat: {result.threatLevel.toUpperCase()}
                   </p>
-                  <p className="text-sm opacity-90">
-                    Confidence Score: <span className={`font-bold ${getScoreColor(result.confidenceScore)}`}>
+
+                  <p className="text-sm">
+                    Score: <span className={`font-bold ${getScoreColor(result.confidenceScore)}`}>
                       {result.confidenceScore.toFixed(1)}%
                     </span>
                   </p>
-                  {result.scanDuration && (
-                    <p className="text-sm opacity-75 mt-1">
-                      Analysis completed in {result.scanDuration}ms
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
 
-            {result.extractedUrls && result.extractedUrls.length > 0 && (
-              <div className="bg-purple-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <LinkIcon className="w-5 h-5 text-purple-500" />
-                  Extracted URLs ({result.extractedUrls.length})
+            {/* URLs */}
+            {result.extractedUrls?.length > 0 && (
+              <div className="bg-[#020617] border border-slate-800 rounded-xl p-4">
+                <h4 className="flex items-center gap-2 mb-3 text-purple-400">
+                  <LinkIcon className="w-4 h-4" />
+                  Extracted URLs
                 </h4>
-                <ul className="space-y-2">
-                  {result.extractedUrls.map((url, idx) => (
-                    <li key={idx} className="text-sm text-gray-700 bg-white p-2 rounded border border-purple-200 break-all">
-                      {url}
-                    </li>
-                  ))}
-                </ul>
+                {result.extractedUrls.map((url, i) => (
+                  <p key={i} className="text-sm text-slate-300 break-all">
+                    {url}
+                  </p>
+                ))}
               </div>
             )}
 
+            {/* Indicators */}
             {result.indicators.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-500" />
-                  Threat Indicators ({result.indicators.length})
-                </h4>
-                <ul className="space-y-2">
-                  {result.indicators.map((indicator, idx) => (
-                    <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                      <span className="text-orange-500 mt-1">•</span>
-                      <span>{indicator}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="bg-[#020617] border border-slate-800 rounded-xl p-4">
+                <h4 className="text-orange-400 mb-3">Threat Indicators</h4>
+                {result.indicators.map((i, idx) => (
+                  <p key={idx} className="text-sm text-slate-300">• {i}</p>
+                ))}
               </div>
             )}
 
+            {/* Recommendations */}
             {result.recommendations.length > 0 && (
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-blue-500" />
-                  Recommendations
-                </h4>
-                <ul className="space-y-2">
-                  {result.recommendations.map((rec, idx) => (
-                    <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                      <span className="text-blue-500 mt-1">•</span>
-                      <span>{rec}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="bg-[#020617] border border-slate-800 rounded-xl p-4">
+                <h4 className="text-blue-400 mb-3">Recommendations</h4>
+                {result.recommendations.map((r, idx) => (
+                  <p key={idx} className="text-sm text-slate-300">• {r}</p>
+                ))}
               </div>
             )}
+
           </div>
         )}
+
       </div>
     </div>
   );

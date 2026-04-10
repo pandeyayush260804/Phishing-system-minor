@@ -18,134 +18,130 @@ export default function URLScanner() {
       const data = await analyzeURL(url);
       setResult(data);
     } catch (error) {
-      console.error('Error analyzing URL:', error);
-      alert('Failed to analyze URL. Please try again.');
+      console.error(error);
+      alert('Failed to analyze URL');
     } finally {
       setLoading(false);
     }
   };
 
-  const getThreatColor = (level: string) => {
+  const getColor = (level: string) => {
     switch (level) {
-      case 'critical': return 'text-red-600 bg-red-50 border-red-200';
-      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      default: return 'text-green-600 bg-green-50 border-green-200';
+      case 'critical': return 'from-red-500 to-red-700';
+      case 'high': return 'from-orange-500 to-orange-700';
+      case 'medium': return 'from-yellow-500 to-yellow-600';
+      default: return 'from-green-500 to-green-700';
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-red-600';
-    if (score >= 65) return 'text-orange-600';
-    if (score >= 50) return 'text-yellow-600';
-    return 'text-green-600';
-  };
-
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-[#0f172a] text-white rounded-xl shadow-xl p-6 max-w-3xl mx-auto transition-all duration-300">
+
+      {/* HEADER */}
       <div className="flex items-center gap-3 mb-6">
-        <Shield className="w-8 h-8 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">URL Scanner</h2>
+        <Shield className="w-8 h-8 text-blue-400" />
+        <h2 className="text-2xl font-bold">URL Scanner</h2>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Enter URL to analyze
-          </label>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
-              placeholder="https://example.com"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={loading}
-            />
-            <button
-              onClick={handleAnalyze}
-              disabled={loading || !url.trim()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                'Scan URL'
-              )}
-            </button>
-          </div>
-        </div>
+      {/* INPUT */}
+      <div className="flex gap-3">
+        <input
+          type="text"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://suspicious-link.com"
+          className="flex-1 px-4 py-3 rounded-lg bg-[#1e293b] border border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+          disabled={loading}
+        />
 
-        {result && (
-          <div className="mt-6 space-y-4">
-            <div className={`p-4 rounded-lg border-2 ${getThreatColor(result.threatLevel)}`}>
-              <div className="flex items-start gap-3">
-                {result.isPhishing ? (
-                  <AlertTriangle className="w-6 h-6 flex-shrink-0 mt-1" />
-                ) : (
-                  <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
-                )}
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-1">
-                    {result.isPhishing ? 'PHISHING DETECTED' : 'URL Appears Safe'}
-                  </h3>
-                  <p className="text-sm opacity-90">
-                    Threat Level: <span className="font-semibold uppercase">{result.threatLevel}</span>
-                  </p>
-                  <p className="text-sm opacity-90">
-                    Confidence Score: <span className={`font-bold ${getScoreColor(result.confidenceScore)}`}>
-                      {result.confidenceScore.toFixed(1)}%
-                    </span>
-                  </p>
-                  {result.scanDuration && (
-                    <p className="text-sm opacity-75 mt-1">
-                      Analysis completed in {result.scanDuration}ms
-                    </p>
-                  )}
-                </div>
+        <button
+          onClick={handleAnalyze}
+          disabled={loading || !url.trim()}
+          className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 hover:scale-105 transition-all duration-200 flex items-center gap-2 disabled:opacity-50"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin w-5 h-5" />
+              Scanning...
+            </>
+          ) : (
+            'Scan'
+          )}
+        </button>
+      </div>
+
+      {/* 🔥 SCANNING ANIMATION */}
+      {loading && (
+        <div className="mt-6">
+          <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 animate-pulse w-full"></div>
+          </div>
+          <p className="text-sm text-gray-400 mt-2">Analyzing URL security...</p>
+        </div>
+      )}
+
+      {/* RESULT */}
+      {result && (
+        <div className="mt-6 space-y-4 animate-fade-in">
+
+          {/* RESULT CARD */}
+          <div className={`p-5 rounded-xl bg-gradient-to-r ${getColor(result.threatLevel)} shadow-lg`}>
+            <div className="flex gap-3">
+              {result.isPhishing ? (
+                <AlertTriangle className="w-7 h-7" />
+              ) : (
+                <CheckCircle className="w-7 h-7" />
+              )}
+
+              <div>
+                <h3 className="text-lg font-bold">
+                  {result.isPhishing ? 'Phishing Detected' : 'Safe URL'}
+                </h3>
+                <p>Threat Level: {result.threatLevel.toUpperCase()}</p>
+                <p>Confidence: {result.confidenceScore.toFixed(1)}%</p>
               </div>
             </div>
 
-            {result.indicators.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-500" />
-                  Threat Indicators ({result.indicators.length})
-                </h4>
-                <ul className="space-y-2">
-                  {result.indicators.map((indicator, idx) => (
-                    <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                      <span className="text-orange-500 mt-1">•</span>
-                      <span>{indicator}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {result.recommendations.length > 0 && (
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <ExternalLink className="w-5 h-5 text-blue-500" />
-                  Recommendations
-                </h4>
-                <ul className="space-y-2">
-                  {result.recommendations.map((rec, idx) => (
-                    <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                      <span className="text-blue-500 mt-1">•</span>
-                      <span>{rec}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* 🔥 PROGRESS BAR */}
+            <div className="mt-3 w-full bg-black/30 rounded-full h-2">
+              <div
+                className="h-2 rounded-full bg-white"
+                style={{ width: `${result.confidenceScore}%` }}
+              />
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* INDICATORS */}
+          {result.indicators.length > 0 && (
+            <div className="bg-[#1e293b] p-4 rounded-lg">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-orange-400" />
+                Threat Indicators
+              </h4>
+              <ul className="text-sm space-y-1 text-gray-300">
+                {result.indicators.map((i, idx) => (
+                  <li key={idx}>• {i}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* RECOMMENDATIONS */}
+          {result.recommendations.length > 0 && (
+            <div className="bg-[#1e293b] p-4 rounded-lg">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <ExternalLink className="w-4 h-4 text-blue-400" />
+                Recommendations
+              </h4>
+              <ul className="text-sm space-y-1 text-gray-300">
+                {result.recommendations.map((r, idx) => (
+                  <li key={idx}>• {r}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
