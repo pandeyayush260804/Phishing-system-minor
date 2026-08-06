@@ -62,12 +62,25 @@ Deno.serve(async (req: Request) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error analyzing content:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
+  console.error("Error analyzing content:", error);
+
+  const message =
+    error instanceof Error ? error.message : String(error);
+
+  return new Response(
+    JSON.stringify({
+      error: "Internal server error",
+      details: message,
+    }),
+    {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
 });
 
 async function analyzeContent(content: string, contentType: string, supabase: any): Promise<AnalysisResult> {
