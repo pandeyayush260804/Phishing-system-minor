@@ -2,23 +2,28 @@ import { useState } from 'react';
 import FrontPage from './components/FrontPage';
 import Dashboard from './components/Dashboard';
 
-type Page = 'frontpage' | 'dashboard';
+type View = 'frontpage' | 'dashboard';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('frontpage');
+  const [currentView, setCurrentView] = useState<View>('frontpage');
 
   const handleEnterDashboard = () => {
-    setCurrentPage('dashboard');
+    setCurrentView('dashboard');
   };
 
-  const handleLogout = () => {
-    setCurrentPage('frontpage');
+  const handleExitDashboard = () => {
+    setCurrentView('frontpage');
   };
 
   return (
     <>
-      {currentPage === 'frontpage' && <FrontPage onEnter={handleEnterDashboard} />}
-      {currentPage === 'dashboard' && <Dashboard onLogout={handleLogout} />}
+      {currentView === 'frontpage' && (
+        <FrontPage onEnter={handleEnterDashboard} />
+      )}
+
+      {currentView === 'dashboard' && (
+        <Dashboard onLogout={handleExitDashboard} />
+      )}
     </>
   );
 }
